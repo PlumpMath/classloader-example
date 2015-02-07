@@ -18,14 +18,23 @@ public class MyClassLoader extends ClassLoader {
     protected Class findClass(String name) throws ClassNotFoundException {
         String path = name.replaceAll("\\.", File.separator) + ".class";
         File file = new File(baseDir, path);
+        FileInputStream inputStream = null;
         try {
-            MappedByteBuffer bb = new FileInputStream(file).
-                    getChannel().
+            inputStream = new FileInputStream(file);
+            MappedByteBuffer bb = inputStream.getChannel().
                     map(FileChannel.MapMode.READ_ONLY, 0, file.length());
             Class<?> klass = defineClass(null, bb, null);
             return klass;
         } catch (IOException e) {
             throw new RuntimeException("Failed to load class", e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
